@@ -21,7 +21,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/upstream-releases"
-          gh api --paginate "/repos/${UPSTREAM_REPO}/releases?per_page=100" --jq '.[] | @base64' | while IFS= read -r encoded; do
+          gh api --allow-escape-sequences --paginate "/repos/${UPSTREAM_REPO}/releases?per_page=100" --jq '.[] | @base64' | while IFS= read -r encoded; do
             release="$(printf '%s' "$encoded" | base64 --decode)"; tag="$(jq -r '.tag_name' <<<"$release")"
             if gh api "/repos/${FORK_REPO}/releases/tags/${tag}" >/dev/null 2>&1; then echo "Skipping ${tag}: already mirrored"; continue; fi
             title="$(jq -r '.name // .tag_name' <<<"$release")"; draft="$(jq -r '.draft' <<<"$release")"; prerelease="$(jq -r '.prerelease' <<<"$release")"; target="$(jq -r '.target_commitish // empty' <<<"$release")"
